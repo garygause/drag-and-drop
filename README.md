@@ -1,2 +1,2 @@
-# drag-and-drop
-Typescript project implementing a drag and drop application.
+# understanding-ts
+The Understanding Typescript course on Udemy.
