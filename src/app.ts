@@ -15,6 +15,15 @@ function autobind(
   return adjDescriptor;
 }
 
+interface Validatable {
+  value: string | number | boolean;
+  required: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
+
 // ProjectInput class
 class ProjectInput {
   templateElement: HTMLTemplateElement;
@@ -62,11 +71,21 @@ class ProjectInput {
   private getUserInput(): [string, string, number] | void {
     const userTitle = this.titleInputElement.value;
     const userDescr = this.descriptionInputElement.value;
-    const userPeople = this.peopleInputElement.value;
+    const userPeople = +this.peopleInputElement.value;
 
-    // basic validation
-    if (this.validateRequiredInputs([userTitle, userDescr, userPeople])) {
-      return [userTitle, userDescr, +userPeople];
+    const validatableInputs: Validatable[] = [
+      { value: userTitle, required: true, minLength: 5 },
+      { value: userDescr, required: true, minLength: 5 },
+      { value: userPeople, required: true, min: 0 },
+    ];
+
+    // validation
+    let isValid = true;
+    for (let validatableInput of validatableInputs) {
+      isValid = isValid && this.validate(validatableInput);
+    }
+    if (isValid) {
+      return [userTitle, userDescr, userPeople];
     }
 
     alert('Invalid input.');
@@ -79,10 +98,33 @@ class ProjectInput {
     this.peopleInputElement.value = '';
   }
 
-  private validateRequiredInputs(inputs: string[]): boolean {
-    for (let input of inputs) {
-      if (input.trim().length === 0) {
-        console.log('invalid');
+  private validate(input: Validatable): boolean {
+    if (input.required) {
+      if (input.value.toString().trim().length === 0) {
+        return false;
+      }
+    }
+
+    if (input.minLength && typeof input.value === 'string') {
+      if (input.value.trim().length < input.minLength) {
+        return false;
+      }
+    }
+
+    if (input.maxLength && typeof input.value === 'string') {
+      if (input.value.trim().length > input.maxLength) {
+        return false;
+      }
+    }
+
+    if (input.min && typeof input.value === 'number') {
+      if (input.value < input.min) {
+        return false;
+      }
+    }
+
+    if (input.max && typeof input.value === 'number') {
+      if (input.value > input.max) {
         return false;
       }
     }
