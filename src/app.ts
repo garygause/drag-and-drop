@@ -65,22 +65,12 @@ class ProjectInput {
     const userPeople = this.peopleInputElement.value;
 
     // basic validation
-    if (
-      this.validateRequiredInputString(userTitle) &&
-      this.validateRequiredInputString(userDescr) &&
-      this.validateRequiredInputString(userPeople)
-    ) {
-    }
-    if (
-      userTitle.trim().length === 0 ||
-      userDescr.trim().length === 0 ||
-      userPeople.trim().length === 0
-    ) {
-      alert('Invalid input.');
-      return;
-    } else {
+    if (this.validateRequiredInputs([userTitle, userDescr, userPeople])) {
       return [userTitle, userDescr, +userPeople];
     }
+
+    alert('Invalid input.');
+    return;
   }
 
   private clearInputs() {
@@ -89,9 +79,12 @@ class ProjectInput {
     this.peopleInputElement.value = '';
   }
 
-  private validateRequiredInputString(value: string) {
-    if (value.trim().length === 0) {
-      return false;
+  private validateRequiredInputs(inputs: string[]): boolean {
+    for (let input of inputs) {
+      if (input.trim().length === 0) {
+        console.log('invalid');
+        return false;
+      }
     }
     return true;
   }
@@ -102,9 +95,9 @@ class ProjectInput {
     const userInput = this.getUserInput();
     if (Array.isArray(userInput)) {
       const [title, desc, people] = userInput;
+      this.clearInputs();
       console.log(title);
     }
-    this.clearInputs();
   }
 
   private configure() {
