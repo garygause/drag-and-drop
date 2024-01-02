@@ -57,10 +57,54 @@ class ProjectInput {
     this.attach();
   }
 
+  // using a tuple or nothing on error
+  // TODO: refactor to generic method and better error handling
+  private getUserInput(): [string, string, number] | void {
+    const userTitle = this.titleInputElement.value;
+    const userDescr = this.descriptionInputElement.value;
+    const userPeople = this.peopleInputElement.value;
+
+    // basic validation
+    if (
+      this.validateRequiredInputString(userTitle) &&
+      this.validateRequiredInputString(userDescr) &&
+      this.validateRequiredInputString(userPeople)
+    ) {
+    }
+    if (
+      userTitle.trim().length === 0 ||
+      userDescr.trim().length === 0 ||
+      userPeople.trim().length === 0
+    ) {
+      alert('Invalid input.');
+      return;
+    } else {
+      return [userTitle, userDescr, +userPeople];
+    }
+  }
+
+  private clearInputs() {
+    this.titleInputElement.value = '';
+    this.descriptionInputElement.value = '';
+    this.peopleInputElement.value = '';
+  }
+
+  private validateRequiredInputString(value: string) {
+    if (value.trim().length === 0) {
+      return false;
+    }
+    return true;
+  }
+
   @autobind
   private submitHandler(event: Event) {
     event.preventDefault();
-    console.log(this.titleInputElement.value);
+    const userInput = this.getUserInput();
+    if (Array.isArray(userInput)) {
+      const [title, desc, people] = userInput;
+      console.log(title);
+    }
+    this.clearInputs();
   }
 
   private configure() {
