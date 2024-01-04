@@ -203,16 +203,28 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
   }
 
   private renderProjects() {
-    const listElement = document.getElementById(
-      `${this.projectType}-projects-list`
-    )!;
-    // clear project list
-    listElement.innerHTML = '';
-    for (const item of this.assignedProjects) {
-      const listItem = document.createElement('li');
-      listItem.textContent = item.title;
-      listElement.appendChild(listItem);
+    this.element.querySelector('ul')!.innerHTML = '';
+
+    for (const project of this.assignedProjects) {
+      new ProjectItem(this.element.querySelector('ul')!.id, project);
     }
+  }
+}
+
+class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+  constructor(public hostId: string, private project: Project) {
+    super('single-project', hostId, false, project.id);
+    this.configure();
+    this.renderContent();
+  }
+
+  configure(): void {}
+
+  renderContent(): void {
+    this.element.querySelector('h2')!.textContent = this.project.title;
+    this.element.querySelector('h3')!.textContent =
+      this.project.people.toString() + ' people';
+    this.element.querySelector('p')!.textContent = this.project.description;
   }
 }
 

@@ -145,14 +145,26 @@ class ProjectList extends Component {
         });
     }
     renderProjects() {
-        const listElement = document.getElementById(`${this.projectType}-projects-list`);
-        // clear project list
-        listElement.innerHTML = '';
-        for (const item of this.assignedProjects) {
-            const listItem = document.createElement('li');
-            listItem.textContent = item.title;
-            listElement.appendChild(listItem);
+        this.element.querySelector('ul').innerHTML = '';
+        for (const project of this.assignedProjects) {
+            new ProjectItem(this.element.querySelector('ul').id, project);
         }
+    }
+}
+class ProjectItem extends Component {
+    constructor(hostId, project) {
+        super('single-project', hostId, false, project.id);
+        this.hostId = hostId;
+        this.project = project;
+        this.configure();
+        this.renderContent();
+    }
+    configure() { }
+    renderContent() {
+        this.element.querySelector('h2').textContent = this.project.title;
+        this.element.querySelector('h3').textContent =
+            this.project.people.toString() + ' people';
+        this.element.querySelector('p').textContent = this.project.description;
     }
 }
 // ProjectInput class
