@@ -87,19 +87,46 @@ function validate(input) {
     }
     return true;
 }
-//ProjectList class
-class ProjectList {
-    constructor(projectType) {
-        this.projectType = projectType;
-        this.assignedProjects = [];
+// Component base class using generics
+class Component {
+    constructor(templateId, hostElementId, insertAtBeginning, newElementId) {
         // setup access to dom elements
-        this.templateElement = document.getElementById('project-list');
-        this.hostElement = document.getElementById('app');
+        this.templateElement = document.getElementById(templateId);
+        this.hostElement = document.getElementById(hostElementId);
         // import template content
         const importedNode = document.importNode(this.templateElement.content, true);
         // get template content
         this.element = importedNode.firstElementChild;
-        this.element.id = `${projectType}-projects`;
+        if (newElementId) {
+            this.element.id = newElementId;
+        }
+        this.attach(insertAtBeginning);
+    }
+    attach(insertAtBeginning) {
+        /**
+         * attach
+         *
+         * convenience method for rendering content
+         */
+        this.hostElement.insertAdjacentElement(insertAtBeginning ? 'afterbegin' : 'beforeend', this.element);
+    }
+}
+//ProjectList class
+class ProjectList extends Component {
+    constructor(projectType) {
+        super('project-list', 'app', false, `${projectType}-projects`);
+        this.projectType = projectType;
+        this.assignedProjects = [];
+        this.configure();
+        this.renderContent();
+    }
+    renderContent() {
+        const listId = `${this.projectType}-projects-list`;
+        this.element.querySelector('ul').id = listId;
+        this.element.querySelector('h2').textContent =
+            this.projectType.toUpperCase() + ' PROJECTS';
+    }
+    configure() {
         // setup listener for state
         projectState.addListener((projects) => {
             // filter projects by list type
@@ -111,8 +138,6 @@ class ProjectList {
             });
             this.renderProjects();
         });
-        this.attach();
-        this.renderContent();
     }
     renderProjects() {
         const listElement = document.getElementById(`${this.projectType}-projects-list`);
@@ -124,35 +149,23 @@ class ProjectList {
             listElement.appendChild(listItem);
         }
     }
-    renderContent() {
-        const listId = `${this.projectType}-projects-list`;
-        this.element.querySelector('ul').id = listId;
-        this.element.querySelector('h2').textContent =
-            this.projectType.toUpperCase() + ' PROJECTS';
-    }
-    attach() {
-        this.hostElement.insertAdjacentElement('beforeend', this.element);
-    }
 }
 // ProjectInput class
-class ProjectInput {
+class ProjectInput extends Component {
     constructor() {
-        // setup access to dom elements
-        this.templateElement = document.getElementById('project-input');
-        this.hostElement = document.getElementById('app');
-        // import template content
-        const importedNode = document.importNode(this.templateElement.content, true);
-        // get template content
-        this.element = importedNode.firstElementChild;
-        this.element.id = 'user-input';
+        super('project-input', 'app', true, 'user-input');
         // setup access to input elements
         this.titleInputElement = this.element.querySelector('#title');
         this.descriptionInputElement = this.element.querySelector('#description');
         this.peopleInputElement = this.element.querySelector('#people');
         // render content in 'app'
         this.configure();
-        this.attach();
+        this.renderContent();
     }
+    configure() {
+        this.element.addEventListener('submit', this.submitHandler);
+    }
+    renderContent() { }
     // using a tuple or nothing on error
     // TODO: refactor to generic method and better error handling
     getUserInput() {
@@ -189,17 +202,6 @@ class ProjectInput {
             this.clearInputs();
             console.log(title);
         }
-    }
-    configure() {
-        this.element.addEventListener('submit', this.submitHandler);
-    }
-    attach() {
-        /**
-         * attach
-         *
-         * convenience method for rendering content
-         */
-        this.hostElement.insertAdjacentElement('afterbegin', this.element);
     }
 }
 __decorate([

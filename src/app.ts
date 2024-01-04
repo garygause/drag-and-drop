@@ -116,21 +116,23 @@ function validate(input: Validatable): boolean {
   return true;
 }
 
-//ProjectList class
-class ProjectList {
+// Component base class using generics
+abstract class Component<T extends HTMLElement, U extends HTMLElement> {
   templateElement: HTMLTemplateElement;
-  hostElement: HTMLDivElement;
-  element: HTMLElement;
-  assignedProjects: Project[];
+  hostElement: T;
+  element: U;
 
-  constructor(private projectType: 'active' | 'finished') {
-    this.assignedProjects = [];
-
+  constructor(
+    templateId: string,
+    hostElementId: string,
+    insertAtBeginning: boolean,
+    newElementId?: string
+  ) {
     // setup access to dom elements
     this.templateElement = document.getElementById(
-      'project-list'
+      templateId
     )! as HTMLTemplateElement;
-    this.hostElement = document.getElementById('app')! as HTMLDivElement;
+    this.hostElement = document.getElementById(hostElementId)! as T;
 
     // import template content
     const importedNode = document.importNode(
@@ -139,9 +141,50 @@ class ProjectList {
     );
 
     // get template content
-    this.element = importedNode.firstElementChild as HTMLElement;
-    this.element.id = `${projectType}-projects`;
+    this.element = importedNode.firstElementChild as U;
+    if (newElementId) {
+      this.element.id = newElementId;
+    }
 
+    this.attach(insertAtBeginning);
+  }
+
+  private attach(insertAtBeginning: boolean) {
+    /**
+     * attach
+     *
+     * convenience method for rendering content
+     */
+    this.hostElement.insertAdjacentElement(
+      insertAtBeginning ? 'afterbegin' : 'beforeend',
+      this.element
+    );
+  }
+
+  abstract configure(): void;
+  abstract renderContent(): void;
+}
+
+//ProjectList class
+class ProjectList extends Component<HTMLDivElement, HTMLElement> {
+  assignedProjects: Project[];
+
+  constructor(private projectType: 'active' | 'finished') {
+    super('project-list', 'app', false, `${projectType}-projects`);
+    this.assignedProjects = [];
+
+    this.configure();
+    this.renderContent();
+  }
+
+  renderContent() {
+    const listId = `${this.projectType}-projects-list`;
+    this.element.querySelector('ul')!.id = listId;
+    this.element.querySelector('h2')!.textContent =
+      this.projectType.toUpperCase() + ' PROJECTS';
+  }
+
+  configure() {
     // setup listener for state
     projectState.addListener((projects: Project[]) => {
       // filter projects by list type
@@ -153,9 +196,6 @@ class ProjectList {
       });
       this.renderProjects();
     });
-
-    this.attach();
-    this.renderContent();
   }
 
   private renderProjects() {
@@ -170,44 +210,16 @@ class ProjectList {
       listElement.appendChild(listItem);
     }
   }
-
-  private renderContent() {
-    const listId = `${this.projectType}-projects-list`;
-    this.element.querySelector('ul')!.id = listId;
-    this.element.querySelector('h2')!.textContent =
-      this.projectType.toUpperCase() + ' PROJECTS';
-  }
-
-  private attach() {
-    this.hostElement.insertAdjacentElement('beforeend', this.element);
-  }
 }
 
 // ProjectInput class
-class ProjectInput {
-  templateElement: HTMLTemplateElement;
-  hostElement: HTMLDivElement;
-  element: HTMLFormElement;
+class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
   titleInputElement: HTMLInputElement;
   descriptionInputElement: HTMLInputElement;
   peopleInputElement: HTMLInputElement;
 
   constructor() {
-    // setup access to dom elements
-    this.templateElement = document.getElementById(
-      'project-input'
-    )! as HTMLTemplateElement;
-    this.hostElement = document.getElementById('app')! as HTMLDivElement;
-
-    // import template content
-    const importedNode = document.importNode(
-      this.templateElement.content,
-      true
-    );
-
-    // get template content
-    this.element = importedNode.firstElementChild as HTMLFormElement;
-    this.element.id = 'user-input';
+    super('project-input', 'app', true, 'user-input');
 
     // setup access to input elements
     this.titleInputElement = this.element.querySelector(
@@ -222,8 +234,14 @@ class ProjectInput {
 
     // render content in 'app'
     this.configure();
-    this.attach();
+    this.renderContent();
   }
+
+  configure() {
+    this.element.addEventListener('submit', this.submitHandler);
+  }
+
+  renderContent() {}
 
   // using a tuple or nothing on error
   // TODO: refactor to generic method and better error handling
@@ -267,19 +285,6 @@ class ProjectInput {
       this.clearInputs();
       console.log(title);
     }
-  }
-
-  private configure() {
-    this.element.addEventListener('submit', this.submitHandler);
-  }
-
-  private attach() {
-    /**
-     * attach
-     *
-     * convenience method for rendering content
-     */
-    this.hostElement.insertAdjacentElement('afterbegin', this.element);
   }
 }
 
