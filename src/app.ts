@@ -15,10 +15,29 @@ function autobind(
   return adjDescriptor;
 }
 
+// ProjectStatus enum
+enum ProjectStatus {
+  Active,
+  Finished,
+}
+
+// Project class
+class Project {
+  constructor(
+    public id: string,
+    public title: string,
+    public description: string,
+    public people: number,
+    public status: ProjectStatus
+  ) {}
+}
+
 // Project State, singleton, subscriber pattern
+type Listener = (items: Project[]) => void;
+
 class ProjectState {
-  private listeners: any[] = [];
-  private projects: any[] = [];
+  private listeners: Listener[] = [];
+  private projects: Project[] = [];
   private static instance: ProjectState;
 
   private constructor() {}
@@ -31,17 +50,18 @@ class ProjectState {
     return this.instance;
   }
 
-  addListener(listenerFn: Function) {
+  addListener(listenerFn: Listener) {
     this.listeners.push(listenerFn);
   }
 
   addProject(title: string, description: string, people: number) {
-    const newProject = {
-      id: Math.random.toString(),
-      title: title,
-      description: description,
-      people: people,
-    };
+    const newProject = new Project(
+      Math.random.toString(),
+      title,
+      description,
+      people,
+      ProjectStatus.Active
+    );
     this.projects.push(newProject);
 
     for (const listenerFn of this.listeners) {
@@ -101,7 +121,7 @@ class ProjectList {
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLElement;
-  assignedProjects: any[];
+  assignedProjects: Project[];
 
   constructor(private projectType: 'active' | 'finished') {
     this.assignedProjects = [];
@@ -123,8 +143,14 @@ class ProjectList {
     this.element.id = `${projectType}-projects`;
 
     // setup listener for state
-    projectState.addListener((projects: any[]) => {
-      this.assignedProjects = projects;
+    projectState.addListener((projects: Project[]) => {
+      // filter projects by list type
+      this.assignedProjects = projects.filter((item) => {
+        if (this.projectType === 'active') {
+          return item.status === ProjectStatus.Active;
+        }
+        return item.status === ProjectStatus.Finished;
+      });
       this.renderProjects();
     });
 
@@ -136,6 +162,8 @@ class ProjectList {
     const listElement = document.getElementById(
       `${this.projectType}-projects-list`
     )!;
+    // clear project list
+    listElement.innerHTML = '';
     for (const item of this.assignedProjects) {
       const listItem = document.createElement('li');
       listItem.textContent = item.title;
@@ -147,7 +175,7 @@ class ProjectList {
     const listId = `${this.projectType}-projects-list`;
     this.element.querySelector('ul')!.id = listId;
     this.element.querySelector('h2')!.textContent =
-      this.projectType.toUpperCase() + 'PROJECTS';
+      this.projectType.toUpperCase() + ' PROJECTS';
   }
 
   private attach() {
@@ -205,8 +233,8 @@ class ProjectInput {
     const userPeople = +this.peopleInputElement.value;
 
     const validatableInputs: Validatable[] = [
-      { value: userTitle, required: true, minLength: 5 },
-      { value: userDescr, required: true, minLength: 5 },
+      { value: userTitle, required: true, minLength: 3 },
+      { value: userDescr, required: true, minLength: 3 },
       { value: userPeople, required: true, min: 1 },
     ];
 
