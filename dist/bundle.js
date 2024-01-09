@@ -7,23 +7,31 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 var App;
 (function (App) {
-    // ProjectStatus enum
-    let ProjectStatus;
-    (function (ProjectStatus) {
-        ProjectStatus[ProjectStatus["Active"] = 0] = "Active";
-        ProjectStatus[ProjectStatus["Finished"] = 1] = "Finished";
-    })(ProjectStatus = App.ProjectStatus || (App.ProjectStatus = {}));
-    // Project class
-    class Project {
-        constructor(id, title, description, people, status) {
-            this.id = id;
-            this.title = title;
-            this.description = description;
-            this.people = people;
-            this.status = status;
+    // Component base class using generics
+    class Component {
+        constructor(templateId, hostElementId, insertAtBeginning, newElementId) {
+            // setup access to dom elements
+            this.templateElement = document.getElementById(templateId);
+            this.hostElement = document.getElementById(hostElementId);
+            // import template content
+            const importedNode = document.importNode(this.templateElement.content, true);
+            // get template content
+            this.element = importedNode.firstElementChild;
+            if (newElementId) {
+                this.element.id = newElementId;
+            }
+            this.attach(insertAtBeginning);
+        }
+        attach(insertAtBeginning) {
+            /**
+             * attach
+             *
+             * convenience method for rendering content
+             */
+            this.hostElement.insertAdjacentElement(insertAtBeginning ? 'afterbegin' : 'beforeend', this.element);
         }
     }
-    App.Project = Project;
+    App.Component = Component;
 })(App || (App = {}));
 var App;
 (function (App) {
@@ -118,35 +126,10 @@ var App;
     }
     App.autobind = autobind;
 })(App || (App = {}));
-var App;
-(function (App) {
-    // Component base class using generics
-    class Component {
-        constructor(templateId, hostElementId, insertAtBeginning, newElementId) {
-            // setup access to dom elements
-            this.templateElement = document.getElementById(templateId);
-            this.hostElement = document.getElementById(hostElementId);
-            // import template content
-            const importedNode = document.importNode(this.templateElement.content, true);
-            // get template content
-            this.element = importedNode.firstElementChild;
-            if (newElementId) {
-                this.element.id = newElementId;
-            }
-            this.attach(insertAtBeginning);
-        }
-        attach(insertAtBeginning) {
-            /**
-             * attach
-             *
-             * convenience method for rendering content
-             */
-            this.hostElement.insertAdjacentElement(insertAtBeginning ? 'afterbegin' : 'beforeend', this.element);
-        }
-    }
-    App.Component = Component;
-})(App || (App = {}));
 /// <reference path="base-component.ts" />
+/// <reference path="../state/project-state.ts" />
+/// <reference path="../util/validation.ts" />
+/// <reference path="../decorators/autobind.ts" />
 var App;
 (function (App) {
     // ProjectInput class
@@ -208,7 +191,31 @@ var App;
     ], ProjectInput.prototype, "submitHandler", null);
     App.ProjectInput = ProjectInput;
 })(App || (App = {}));
+var App;
+(function (App) {
+    // ProjectStatus enum
+    let ProjectStatus;
+    (function (ProjectStatus) {
+        ProjectStatus[ProjectStatus["Active"] = 0] = "Active";
+        ProjectStatus[ProjectStatus["Finished"] = 1] = "Finished";
+    })(ProjectStatus = App.ProjectStatus || (App.ProjectStatus = {}));
+    // Project class
+    class Project {
+        constructor(id, title, description, people, status) {
+            this.id = id;
+            this.title = title;
+            this.description = description;
+            this.people = people;
+            this.status = status;
+        }
+    }
+    App.Project = Project;
+})(App || (App = {}));
 /// <reference path="base-component.ts" />
+/// <reference path="../decorators/autobind.ts" />
+/// <reference path="../state/project-state.ts" />
+/// <reference path="../models/drag-drop.ts" />
+/// <reference path="../models/project.ts" />
 var App;
 (function (App) {
     //ProjectList class
@@ -280,6 +287,9 @@ var App;
     App.ProjectList = ProjectList;
 })(App || (App = {}));
 /// <reference path="base-component.ts" />
+/// <reference path="../decorators/autobind.ts" />
+/// <reference path="../models/drag-drop.ts" />
+/// <reference path="../models/project.ts" />
 var App;
 (function (App) {
     class ProjectItem extends App.Component {
@@ -318,11 +328,6 @@ var App;
     ], ProjectItem.prototype, "dragEndHandler", null);
     App.ProjectItem = ProjectItem;
 })(App || (App = {}));
-/// <reference path="models/drag-drop.ts" />
-/// <reference path="models/project.ts" />
-/// <reference path="state/project-state.ts" />
-/// <reference path="util/validation.ts" />
-/// <reference path="decorators/autobind.ts" />
 /// <reference path="components/project-input.ts" />
 /// <reference path="components/project-list.ts" />
 /// <reference path="components/project-item.ts" />
